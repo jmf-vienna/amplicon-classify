@@ -20,6 +20,7 @@ list(
   # paths ----
   tar_target(input_path, config |> pluck("path", "data", .default = "data")),
   tar_target(reference, config |> chuck("path", "taxonomy reference"), format = "file"),
+  tar_target(species_reference, config |> pluck("path", "species reference"), format = "file"),
   tar_target(output_path, config |> pluck("path", "data", .default = "data")),
 
   # features ----
@@ -28,7 +29,8 @@ list(
 
   ## classify ----
   tar_target(classification_raw, features |> pull(Sequence) |> dada2_classify(reference)),
-  tar_target(classification, tidy_classification(classification_raw, features)),
+  tar_target(classification_species_raw, features |> pull(Sequence) |> dada2_classify_species(species_reference)),
+  tar_target(classification, tidy_classification(classification_raw, classification_species_raw, features)),
 
   # export ----
   tar_target(classification_file, classification |> write_tsv(path(output_path, "classification", ext = "tsv")))
