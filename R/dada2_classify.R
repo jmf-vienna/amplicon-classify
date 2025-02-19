@@ -1,7 +1,8 @@
 dada2_classify <- function(sequences, reference) {
   dada2::assignTaxonomy(
     sequences,
-    reference
+    reference,
+    multithread = Sys.getenv("THREADS", "1") |> as.integer()
   )
 }
 
