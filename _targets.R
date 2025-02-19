@@ -19,8 +19,8 @@ list(
 
   # paths ----
   tar_target(input_path, config |> pluck("path", "data", .default = "data")),
-  tar_target(reference, config |> chuck("path", "taxonomy reference"), format = "file"),
-  tar_target(species_reference, config |> pluck("path", "species reference"), format = "file"),
+  tar_target(reference_file, config |> chuck("path", "taxonomy reference"), format = "file"),
+  tar_target(species_reference_file, config |> pluck("path", "species reference"), format = "file"),
   tar_target(output_path, config |> pluck("path", "data", .default = "data")),
 
   # features ----
@@ -28,10 +28,15 @@ list(
   tar_target(features, read_tsv(features_file)),
 
   ## classify ----
-  tar_target(classification_raw, features |> pull(Sequence) |> dada2_classify(reference)),
-  tar_target(classification_species_raw, features |> pull(Sequence) |> dada2_classify_species(species_reference)),
+  tar_target(classification_raw, features |> pull(Sequence) |> dada2_classify(reference_file)),
+  tar_target(classification_species_raw, features |> pull(Sequence) |> dada2_classify_species(species_reference_file)),
   tar_target(classification, tidy_classification(classification_raw, classification_species_raw, features)),
 
   # export ----
-  tar_target(classification_file, classification |> write_tsv(path(output_path, "classification", ext = "tsv")))
+  tar_target(classification_file_name, glue::glue(
+    "{base_name}.{reference}_reference.DADA2_classified",
+    base_name = features_file |> path_file() |> path_ext_remove(),
+    reference = reference_file |> path_file() |> str_extract("^[A-Za-z]+") |> str_to_upper(),
+  )),
+  tar_target(classification_file, classification |> write_tsv(path(output_path, classification_file_name, ext = "tsv")))
 )
