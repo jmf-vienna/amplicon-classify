@@ -24,7 +24,7 @@ list(
   tar_target(output_path, config |> pluck("path", "data", .default = "data")),
 
   # features ----
-  tar_target(features_file, find_one_file(input_path, "*features.tsv"), format = "file"),
+  tar_target(features_file, find_one_file(input_path, regexp = "(features|ASVs|OTUs)[.]tsv$"), format = "file"),
   tar_target(features, read_tsv(features_file)),
 
   ## classify ----
