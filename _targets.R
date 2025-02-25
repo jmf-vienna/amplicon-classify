@@ -36,7 +36,7 @@ list(
   tar_target(classification_file_name, glue::glue(
     "{base_name}.{reference}_reference.DADA2_classified",
     base_name = features_file |> path_file() |> path_ext_remove(),
-    reference = reference_file |> path_file() |> str_extract("^[A-Za-z]+") |> str_to_upper(),
+    reference = reference_file |> path_file() |> str_extract("^[A-Za-z]+") |> str_to_upper()
   )),
-  tar_target(classification_file, classification |> write_tsv(path(output_path, classification_file_name, ext = "tsv")))
+  tar_target(classification_file, classification |> write_tsv(path(output_path, classification_file_name, ext = "tsv")), format = "file")
 )
