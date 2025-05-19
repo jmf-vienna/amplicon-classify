@@ -18,15 +18,15 @@ tidy_classification <- function(classification, classification_species, features
   species <-
     classification_species |>
     as.data.frame() |>
-    rownames_to_column("Sequence") |>
+    rownames_to_column("sequence") |>
     as_tibble() |>
     mutate(exact_match = str_c(Genus, " ", Species), .keep = "unused")
 
   classification |>
     as.data.frame() |>
-    rownames_to_column("Sequence") |>
+    rownames_to_column("sequence") |>
     as_tibble() |>
-    left_join(species, by = "Sequence") |>
-    left_join(features, by = "Sequence") |>
+    left_join(species, by = "sequence") |>
+    left_join(features, by = "sequence") |>
     select(2L:ends_with("ID"))
 }

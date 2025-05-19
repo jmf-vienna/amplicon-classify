@@ -28,8 +28,8 @@ list(
   tar_target(features, read_tsv(features_file)),
 
   ## classify ----
-  tar_target(classification_raw, features |> pull(Sequence) |> dada2_classify(reference_file)),
-  tar_target(classification_species_raw, features |> pull(Sequence) |> dada2_classify_species(species_reference_file)),
+  tar_target(classification_raw, features |> pull(sequence) |> dada2_classify(reference_file)),
+  tar_target(classification_species_raw, features |> pull(sequence) |> dada2_classify_species(species_reference_file)),
   tar_target(classification, tidy_classification(classification_raw, classification_species_raw, features)),
 
   # export ----
