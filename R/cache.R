@@ -44,7 +44,7 @@ update_cache <- function(db_path, cached, fresh) {
     cli::cli_alert("cache appended ({.val {nrow(cached)}}+{.val {nrow(fresh)}} row{?s} from/to {.path {db_path}})")
   } else {
     DBI::dbWriteTable(con, "cache", fresh)
-    cli::cli_alert("cache created ({.val {nrow(new)}} row{?s} added to {.path {db_path}})")
+    cli::cli_alert("cache created ({.val {nrow(fresh)}} row{?s} added to {.path {db_path}})")
   }
 
   disconnect(con)
