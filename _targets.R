@@ -19,8 +19,14 @@ list(
 
   # paths ----
   tar_target(input_path, config |> pluck("path", "data", .default = "data")),
-  tar_target(reference_file, config |> chuck("path", "taxonomy reference"), format = "file"),
-  tar_target(species_reference_file, config |> pluck("path", "species reference"), format = "file"),
+  tar_target(reference_file, fs::path(
+    Sys.getenv("PATH_RESOURCES", "resources"),
+    chuck(config, "path", "taxonomy reference")
+  ), format = "file"),
+  tar_target(species_reference_file, fs::path(
+    Sys.getenv("PATH_RESOURCES", "resources"),
+    chuck(config, "path", "species reference")
+  ), format = "file"),
   tar_target(output_path, config |> pluck("path", "data", .default = "data")),
 
   # features ----
