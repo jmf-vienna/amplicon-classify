@@ -10,7 +10,7 @@ dada2_classify <- function(
   reference,
   bootstrap_threshold = 50L,
   ranks = c("Domain", "Phylum", "Class", "Order", "Family", "Genus", "Species"),
-  chunk_size = as.integer(Sys.getenv("CHUNK_SIZE", "10000"))
+  chunk_size = as.integer(Sys.getenv("CHUNK_SIZE", "1000"))
 ) {
   db_path <- make_db_path(reference, 1L, str_c("bootstrap_", bootstrap_threshold))
 
@@ -49,7 +49,7 @@ dada2_classify <- function(
       )
 
     cached <- update_cache(db_path, cached, fresh)
-    missing_sequences <- head(missing_sequences, -chunk_size)
+    missing_sequences <- tail(missing_sequences, -chunk_size)
   }
 
   cached
@@ -81,7 +81,7 @@ dada2_classify_species <- function(
       as_tibble()
 
     cached <- update_cache(db_path, cached, fresh)
-    missing_sequences <- head(missing_sequences, -chunk_size)
+    missing_sequences <- tail(missing_sequences, -chunk_size)
   }
 
   cached
