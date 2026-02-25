@@ -6,10 +6,12 @@ as_tibble <- function(x) {
 }
 
 dada2_classify <- function(
-    sequences,
-    reference,
-    bootstrap_threshold = 50L,
-    ranks = c("Domain", "Phylum", "Class", "Order", "Family", "Genus", "Species")) {
+  sequences,
+  reference,
+  bootstrap_threshold = 50L,
+  ranks = c("Domain", "Phylum", "Class", "Order", "Family", "Genus", "Species"),
+  chunk_size = as.integer(Sys.getenv("CHUNK_SIZE", "10000"))
+) {
   db_path <- make_db_path(reference, 1L, str_c("bootstrap_", bootstrap_threshold))
 
   cached <- get_cache(db_path, sequences)
@@ -20,31 +22,45 @@ dada2_classify <- function(
     return(cached)
   }
 
-  fresh <- dada2::assignTaxonomy(
-    missing_sequences,
-    reference,
-    bootstrap_threshold,
-    outputBootstraps = TRUE,
-    taxLevels = ranks,
-    multithread = Sys.getenv("THREADS", "1") |> as.integer()
-  )
+  while (!vec_is_empty(missing_sequences)) {
+    fresh <-
+      dada2::assignTaxonomy(
+        head(missing_sequences, chunk_size),
+        reference,
+        bootstrap_threshold,
+        outputBootstraps = TRUE,
+        taxLevels = ranks,
+        multithread = Sys.getenv("THREADS", "1") |> as.integer()
+      )
 
-  fresh <- fresh |> map(as_tibble)
+    fresh <- fresh |> map(as_tibble)
 
-  fresh <- inner_join(
-    fresh |> chuck("tax"),
-    fresh |> chuck("boot") |> dplyr::rename_with(\(x) str_c("bootstrap_", x)),
-    by = join_by(sequence == bootstrap_sequence)
-  ) |>
-    select(sequence, all_of(str_c(
-      rep(c("", "bootstrap_"), length(ranks)),
-      rep(ranks, each = 2L)
-    )))
+    fresh <- inner_join(
+      fresh |> chuck("tax"),
+      fresh |> chuck("boot") |> dplyr::rename_with(\(x) str_c("bootstrap_", x)),
+      by = join_by(sequence == bootstrap_sequence)
+    ) |>
+      select(
+        sequence,
+        all_of(str_c(
+          rep(c("", "bootstrap_"), length(ranks)),
+          rep(ranks, each = 2L)
+        ))
+      )
 
-  update_cache(db_path, cached, fresh)
+    cached <- update_cache(db_path, cached, fresh)
+    missing_sequences <- head(missing_sequences, -chunk_size)
+  }
+
+  cached
 }
 
-dada2_classify_species <- function(sequences, reference, allow_multiple = TRUE) {
+dada2_classify_species <- function(
+  sequences,
+  reference,
+  allow_multiple = TRUE,
+  chunk_size = as.integer(Sys.getenv("CHUNK_SIZE", "10000"))
+) {
   db_path <- make_db_path(reference, 1L, ifelse(allow_multiple, "allow_multiple", "disallow_multiple"))
 
   cached <- get_cache(db_path, sequences)
@@ -55,15 +71,20 @@ dada2_classify_species <- function(sequences, reference, allow_multiple = TRUE) 
     return(cached)
   }
 
-  fresh <-
-    dada2::assignSpecies(
-      missing_sequences,
-      reference,
-      allowMultiple = allow_multiple
-    ) |>
-    as_tibble()
+  while (!vec_is_empty(missing_sequences)) {
+    fresh <-
+      dada2::assignSpecies(
+        head(missing_sequences, chunk_size),
+        reference,
+        allowMultiple = allow_multiple
+      ) |>
+      as_tibble()
 
-  update_cache(db_path, cached, fresh)
+    cached <- update_cache(db_path, cached, fresh)
+    missing_sequences <- head(missing_sequences, -chunk_size)
+  }
+
+  cached
 }
 
 tidy_classification <- function(classification, classification_species, features) {
