@@ -15,18 +15,26 @@ tar_config_get("script") |>
 list(
   # config ----
   tar_target(config_file, Sys.getenv("R_CONFIG_FILE", "config.yaml"), format = "file"),
-  tar_target(config, config::get(config = Sys.getenv("TAR_PROJECT", "default"), file = config_file)),
+  tar_target(config, config::get(config = Sys.getenv("DATASET", Sys.getenv("TAR_PROJECT", "default")), file = config_file)),
 
   # paths ----
   tar_target(input_path, config |> pluck("path", "data", .default = "data")),
-  tar_target(reference_file, fs::path(
-    Sys.getenv("PATH_RESOURCES", "resources"),
-    chuck(config, "path", "taxonomy reference")
-  ), format = "file"),
-  tar_target(species_reference_file, fs::path(
-    Sys.getenv("PATH_RESOURCES", "resources"),
-    chuck(config, "path", "species reference")
-  ), format = "file"),
+  tar_target(
+    reference_file,
+    fs::path(
+      Sys.getenv("PATH_RESOURCES", "resources"),
+      chuck(config, "path", "taxonomy reference")
+    ),
+    format = "file"
+  ),
+  tar_target(
+    species_reference_file,
+    fs::path(
+      Sys.getenv("PATH_RESOURCES", "resources"),
+      chuck(config, "path", "species reference")
+    ),
+    format = "file"
+  ),
   tar_target(output_path, config |> pluck("path", "data", .default = "data")),
 
   # features ----
@@ -39,10 +47,13 @@ list(
   tar_target(classification, tidy_classification(classification_raw, classification_species_raw, features)),
 
   # export ----
-  tar_target(classification_file_name, glue::glue(
-    "{base_name}.{reference}_reference.DADA2_classified",
-    base_name = features_file |> path_file() |> path_ext_remove(),
-    reference = reference_file |> path_file() |> str_extract("^[A-Za-z]+") |> str_to_upper()
-  )),
+  tar_target(
+    classification_file_name,
+    glue::glue(
+      "{base_name}.{reference}_reference.DADA2_classified",
+      base_name = features_file |> path_file() |> path_ext_remove(),
+      reference = reference_file |> path_file() |> str_extract("^[A-Za-z]+") |> str_to_upper()
+    )
+  ),
   tar_target(classification_file, classification |> write_tsv(path(output_path, classification_file_name, ext = "tsv")), format = "file")
 )
