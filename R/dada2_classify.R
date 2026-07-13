@@ -123,3 +123,15 @@ tidy_classification <- function(classification, classification_species, features
     select(2L:ends_with("ID")) |>
     arrange(across(last_col()))
 }
+
+classification_output_name <- function(input_name, reference) {
+  if (is.null(reference)) {
+    return()
+  }
+
+  glue::glue(
+    "{base_name}.{name}_reference.DADA2_classified",
+    base_name = input_name |> path_file() |> path_ext_remove(),
+    name = reference |> chuck("id")
+  )
+}

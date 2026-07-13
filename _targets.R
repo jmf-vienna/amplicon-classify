@@ -55,11 +55,7 @@ list(
   # export ----
   tar_target(
     classification_file_name,
-    glue::glue(
-      "{base_name}.{reference}_reference.DADA2_classified",
-      base_name = features_file |> path_file() |> path_ext_remove(),
-      reference = references |> chuck("id")
-    ),
+    classification_output_name(features_file, references),
     pattern = map(references)
   ),
   tar_target(
