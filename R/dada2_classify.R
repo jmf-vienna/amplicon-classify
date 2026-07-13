@@ -5,6 +5,13 @@ as_tibble <- function(x) {
     tibble::as_tibble()
 }
 
+full_path <- function(x) {
+  fs::path(
+    Sys.getenv("PATH_RESOURCES", "resources"),
+    chuck(x, "path")
+  )
+}
+
 dada2_classify <- function(
   sequences,
   reference,
@@ -12,7 +19,12 @@ dada2_classify <- function(
   ranks = c("Domain", "Phylum", "Class", "Order", "Family", "Genus", "Species"),
   chunk_size = as.integer(Sys.getenv("CHUNK_SIZE", "1000"))
 ) {
-  db_path <- make_db_path(reference, 1L, str_c("bootstrap_", bootstrap_threshold))
+  if (is.null(reference)) {
+    return()
+  }
+
+  reference_path <- full_path(reference)
+  db_path <- make_db_path(reference_path, 1L, str_c("bootstrap_", bootstrap_threshold))
 
   cached <- get_cache(db_path, sequences)
   missing_sequences <- setdiff(sequences, pull(cached, sequence))
@@ -26,7 +38,7 @@ dada2_classify <- function(
     fresh <-
       dada2::assignTaxonomy(
         head(missing_sequences, chunk_size),
-        reference,
+        reference_path,
         bootstrap_threshold,
         outputBootstraps = TRUE,
         taxLevels = ranks,
@@ -61,7 +73,12 @@ dada2_classify_species <- function(
   allow_multiple = TRUE,
   chunk_size = as.integer(Sys.getenv("CHUNK_SIZE", "10000"))
 ) {
-  db_path <- make_db_path(reference, 1L, ifelse(allow_multiple, "allow_multiple", "disallow_multiple"))
+  if (is.null(reference)) {
+    return()
+  }
+
+  reference_path <- full_path(reference)
+  db_path <- make_db_path(reference_path, 1L, ifelse(allow_multiple, "allow_multiple", "disallow_multiple"))
 
   cached <- get_cache(db_path, sequences)
   missing_sequences <- setdiff(sequences, pull(cached, sequence))
@@ -75,7 +92,7 @@ dada2_classify_species <- function(
     fresh <-
       dada2::assignSpecies(
         head(missing_sequences, chunk_size),
-        reference,
+        reference_path,
         allowMultiple = allow_multiple
       ) |>
       as_tibble()
@@ -88,9 +105,17 @@ dada2_classify_species <- function(
 }
 
 tidy_classification <- function(classification, classification_species, features) {
+  if (is.null(classification)) {
+    return()
+  }
+
   species <-
-    classification_species |>
-    mutate(Species_exact_match = str_c(Genus, " ", Species), .keep = "unused")
+    if (is.null(classification_species)) {
+      features |> select(sequence)
+    } else {
+      classification_species |>
+        mutate(Species_exact_match = str_c(Genus, " ", Species), .keep = "unused")
+    }
 
   classification |>
     left_join(species, by = "sequence") |>
