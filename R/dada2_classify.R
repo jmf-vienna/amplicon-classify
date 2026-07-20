@@ -16,7 +16,6 @@ dada2_classify <- function(
   sequences,
   reference,
   bootstrap_threshold = 50L,
-  ranks = c("Domain", "Phylum", "Class", "Order", "Family", "Genus", "Species"),
   chunk_size = as.integer(Sys.getenv("CHUNK_SIZE", "1000"))
 ) {
   if (is.null(reference)) {
@@ -33,6 +32,8 @@ dada2_classify <- function(
     cli::cli_alert("cache was up-to-date ({.val {nrow(cached)}} row{?s} read from {.path {db_path}})")
     return(cached)
   }
+
+  ranks <- pluck(reference, "ranks", .default = c("Domain", "Phylum", "Class", "Order", "Family", "Genus", "Species"))
 
   while (!vec_is_empty(missing_sequences)) {
     fresh <-
