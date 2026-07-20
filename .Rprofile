@@ -1,11 +1,13 @@
-library(conflicted)
-
 if (interactive()) {
+  require(conflicted)
+
   require(targets)
 
   require(cli)
   require(dplyr)
+  require(forcats)
   require(fs)
+  require(ggplot2)
   require(purrr)
   require(readr)
   require(rlang)
@@ -13,4 +15,8 @@ if (interactive()) {
   require(tibble)
   require(tidyr)
   require(vctrs)
+
+  tar_load_globals()
+
+  options(warn = 1L)
 }
