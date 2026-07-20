@@ -133,6 +133,6 @@ classification_output_name <- function(input_name, reference) {
   glue::glue(
     "{base_name}.{name}_reference.DADA2_classified",
     base_name = input_name |> path_file() |> path_ext_remove(),
-    name = reference |> chuck("id")
+    name = reference |> chuck("id") |> force_valid_file_name()
   )
 }
