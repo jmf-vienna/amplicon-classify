@@ -114,8 +114,10 @@ tidy_classification <- function(classification, classification_species, features
     if (is.null(classification_species)) {
       features |> select(sequence)
     } else {
-      classification_species |>
-        mutate(Species_exact_match = str_c(Genus, " ", Species), .keep = "unused")
+      classification |>
+        dplyr::mutate(Genus = str_remove(Genus, "--other$")) |>
+        left_join(classification_species, by = c("sequence", "Genus")) |>
+        select(sequence, Species)
     }
 
   classification |>
