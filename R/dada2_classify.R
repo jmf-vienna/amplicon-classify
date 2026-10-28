@@ -72,7 +72,7 @@ dada2_classify_species <- function(
   sequences,
   reference,
   allow_multiple = TRUE,
-  chunk_size = as.integer(Sys.getenv("CHUNK_SIZE", "10000"))
+  chunk_size = as.integer(Sys.getenv("CHUNK_SIZE", "1000"))
 ) {
   if (is.null(reference)) {
     return()
