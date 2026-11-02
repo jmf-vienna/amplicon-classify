@@ -4,8 +4,12 @@ make_db_path <- function(path, format_version, extras = NULL) {
     str_c(collapse = ".")
 }
 
-connect <- function(db_path) {
-  con <- DBI::dbConnect(RSQLite::SQLite(), db_path)
+connect <- function(db_path, read_only = TRUE) {
+  if (!fs::file_exists(db_path) || isFALSE(read_only)) {
+    DBI::dbConnect(RSQLite::SQLite(), db_path)
+  } else {
+    DBI::dbConnect(RSQLite::SQLite(), db_path, flags = RSQLite::SQLITE_RO)
+  }
 }
 
 disconnect <- function(con) {
@@ -22,6 +26,7 @@ get_cache <- function(db_path, sequences) {
   con <- connect(db_path)
 
   if (DBI::dbExistsTable(con, "cache")) {
+    cli::cli_alert("opening cache {.file {db_path}}")
     results <-
       dplyr::tbl(con, "cache") |>
       dplyr::collect() |>
@@ -33,11 +38,12 @@ get_cache <- function(db_path, sequences) {
 
   disconnect(con)
 
+  cli::cli_alert("read {.val {nrow(results)}} sequence{?s} from cache")
   results
 }
 
 update_cache <- function(db_path, cached, fresh) {
-  con <- connect(db_path)
+  con <- connect(db_path, read_only = FALSE)
 
   if (DBI::dbExistsTable(con, "cache")) {
     DBI::dbAppendTable(con, "cache", fresh)

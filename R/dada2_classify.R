@@ -22,6 +22,8 @@ dada2_classify <- function(
     return()
   }
 
+  cli::cli_alert("classifying {.val {length(sequences)}} sequences")
+
   reference_path <- full_path(reference)
   db_path <- make_db_path(reference_path, 1L, str_c("bootstrap_", bootstrap_threshold))
 
@@ -29,7 +31,7 @@ dada2_classify <- function(
   missing_sequences <- setdiff(sequences, pull(cached, sequence))
 
   if (vec_is_empty(missing_sequences)) {
-    cli::cli_alert("cache was up-to-date ({.val {nrow(cached)}} row{?s} read from {.path {db_path}})")
+    cli::cli_alert("cache was up-to-date")
     return(cached)
   }
 
@@ -78,6 +80,8 @@ dada2_classify_species <- function(
     return()
   }
 
+  cli::cli_alert("classifying {.val {length(sequences)}} sequences")
+
   reference_path <- full_path(reference)
   db_path <- make_db_path(reference_path, 1L, ifelse(allow_multiple, "allow_multiple", "disallow_multiple"))
 
@@ -85,7 +89,7 @@ dada2_classify_species <- function(
   missing_sequences <- setdiff(sequences, pull(cached, sequence))
 
   if (vec_is_empty(missing_sequences)) {
-    cli::cli_alert("cache was up-to-date ({.val {nrow(cached)}} row{?s} read from {.path {db_path}})")
+    cli::cli_alert("cache was up-to-date")
     return(cached)
   }
 
